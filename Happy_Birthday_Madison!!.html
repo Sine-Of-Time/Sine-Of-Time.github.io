@@ -1,29 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Birthday Card</title>
 
-  <!-- Tab icon -->
-  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/9123/9123699.png">
+  <!-- Tab icon (birthday cake) -->
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/9123/9123699.png"/>
+
+  <!-- (Optional) Google Font used in CSS below -->
+  <link href="https://fonts.googleapis.com/css2?family=Nobile:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
 
   <!-- Link to external CSS -->
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/style.css"/>
+
+  <!-- Confetti (tiny library) -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
-    <div class="card">
-      <div class="back"></div>
-      <div class="front">
-        <div class="imgset">
-          <img width="100%" src="https://conwaykitchen.com/cdn/shop/files/f1de2a23cf250ea9d7f0819f39a2d540_540x_d602bead-264d-4937-9e59-8adec9c58029.jpg?v=1685498146">
-        </div>
-      </div>
-      <div class="text-container">
-        <p class="head">Happy Birthday Madison!!!</p>
-        <p>The only thing that sounds better then these headphones, is spending more time with you!</p>
-        <p>Love Kian Frawley</p>
+  <div class="card" id="card">
+    <div class="back"></div>
+    <div class="front">
+      <div class="imgset">
+        <img width="100%" src="https://conwaykitchen.com/cdn/shop/files/f1de2a23cf250ea9d7f0819f39a2d540_540x_d602bead-264d-4937-9e59-8adec9c58029.jpg?v=1685498146" alt="Headphones"/>
       </div>
     </div>
+    <div class="text-container">
+      <p class="head">Happy Birthday Madison!!!</p>
+      <p>The only thing that sounds better then these headphones, is spending more time with you!</p>
+      <p>Love Kian Frawley</p>
+    </div>
+  </div>
+
+  <!-- Audio: replace src with your FNAF Happy Birthday file URL -->
+  <audio id="birthday-audio" preload="auto">
+    <source src="assets/FnafYay.mp3" type="audio/mpeg"/>
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Card audio + confetti behavior -->
+  <script>
+    (function () {
+      const card = document.getElementById('card');
+      const audio = document.getElementById('birthday-audio');
+
+      // prevent re-trigger spam while hovering in/out
+      let confettiCooldown = false;
+
+      function fireConfettiBurst() {
+        // Nice two-side burst
+        const duration = 1200;
+        const end = Date.now() + duration;
+
+        (function frame() {
+          // left + right cannons
+          confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, ticks: 150 });
+          confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, ticks: 150 });
+          if (Date.now() < end) requestAnimationFrame(frame);
+        })();
+
+        // Big center pop
+        confetti({
+          particleCount: 120,
+          spread: 70,
+          startVelocity: 45,
+          origin: { y: 0.2 }
+        });
+      }
+
+      function playSoundAndConfetti() {
+        // sound
+        try {
+          audio.currentTime = 0;
+          audio.play();
+        } catch (e) { /* click fallback below helps if browser is strict */ }
+
+        // confetti (throttled so it doesn't loop endlessly on hover)
+        if (!confettiCooldown) {
+          fireConfettiBurst();
+          confettiCooldown = true;
+          setTimeout(() => (confettiCooldown = false), 2000); // 2s cooldown
+        }
+      }
+
+      // Play when the card is opened (hover starts)
+      card.addEventListener('mouseenter', playSoundAndConfetti);
+
+      // Pause & reset when the card closes (hover ends)
+      card.addEventListener('mouseleave', () => {
+        audio.pause();
+        audio.currentTime = 0;
+      });
+
+      // Mobile/tap fallback: also trigger on click
+      card.addEventListener('click', () => {
+        if (audio.paused) {
+          playSoundAndConfetti();
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
